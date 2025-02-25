@@ -23,6 +23,8 @@ namespace Scripts.Managers
         public UnityAction onGameWin;
         public UnityAction onGameLose;
 
+        public bool isLevelFinished;
+
         public float perfectTreshold;
         public float dieTreshold;
 
@@ -44,6 +46,7 @@ namespace Scripts.Managers
         {
             onGameStart += () =>
             {
+                isLevelFinished = false;
                 m_CurrentRoadCount = 0;
                 m_TargetRoadCount = LevelManager.Ins.GetRoadCount();
                 SpawnEndPlatform();
@@ -58,11 +61,7 @@ namespace Scripts.Managers
             onGameWin += () =>
             {
                 lastRoad = m_EndPlatform;
-                m_Player.MovePlayer(m_EndPlatform, Enums.MoveType.Finish);
-                // move player
-                // center player
-                // win anim
-                // camera rotate anim
+                isLevelFinished = true;
                 // win ui
             };
         }

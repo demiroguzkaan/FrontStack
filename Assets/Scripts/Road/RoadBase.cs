@@ -87,7 +87,6 @@ namespace Scripts.Road
             transform.position = pos;
             AudioManager.Ins.PlaySound(Enums.SoundType.Perfect, m_GameManager.comboCount);
             m_GameManager.comboCount++;
-            // Particle
             m_GameManager.lastRoad = transform;
             m_GameManager.OnRoadTriggered();
             m_MovementSequence.Kill();

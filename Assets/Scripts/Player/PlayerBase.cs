@@ -13,6 +13,7 @@ namespace Scripts.Player
         [SerializeField] private float m_DieDuration;
 
         private Sequence m_MovementSequence;
+        private bool m_IsAnimated;
 
         private const string RUN_KEY = "Run";
         private const string IDLE_KEY = "Idle";
@@ -20,6 +21,7 @@ namespace Scripts.Player
 
         private void Start()
         {
+            GameManager.Ins.onGameStart += () => { m_Animator.SetTrigger(IDLE_KEY); m_IsAnimated = false; };
             GameManager.Ins.onRoadTriggered += () => MovePlayer(GameManager.Ins.lastRoad, MoveType.Road);
         }
 
@@ -31,10 +33,10 @@ namespace Scripts.Player
             switch (type)
             {
                 case MoveType.Road:
-                    MoveToTarget(target, m_SideWalkDuration, RUN_KEY, m_FrontWalkDuration, IDLE_KEY);
+                    MoveToTarget(target, true, m_SideWalkDuration, RUN_KEY, m_FrontWalkDuration, IDLE_KEY);
                     break;
                 case MoveType.Finish:
-                    MoveToTarget(target, m_FrontWalkDuration, RUN_KEY, m_SideWalkDuration, DANCE_KEY);
+                    MoveToTarget(target, false, m_FrontWalkDuration, RUN_KEY, m_SideWalkDuration, DANCE_KEY);
                     break;
                 case MoveType.Die:
                     HandleDeath();
@@ -42,10 +44,27 @@ namespace Scripts.Player
             }
         }
 
-        private void MoveToTarget(Transform target, float firstDuration, string firstAnim, float secondDuration, string secondAnim)
+        private void MoveToTarget(Transform target, bool moveXFirst, float firstDuration, string firstAnim, float secondDuration, string secondAnim)
         {
-            m_MovementSequence.Append(transform.DOMoveX(target.position.x, firstDuration).OnComplete(() => m_Animator.SetTrigger(firstAnim)))
-                .Append(transform.DOMoveZ(target.position.z, secondDuration).OnComplete(() => m_Animator.SetTrigger(secondAnim)));
+            if (moveXFirst)
+            {
+                m_MovementSequence.Append(transform.DOMoveX(target.position.x, firstDuration).OnComplete(() => m_Animator.SetTrigger(firstAnim)))
+                    .Append(transform.DOMoveZ(target.position.z, secondDuration).OnComplete(() => m_Animator.SetTrigger(secondAnim)));
+            }
+            else
+            {
+                m_MovementSequence.Append(transform.DOMoveZ(target.position.z, firstDuration).OnComplete(() => m_Animator.SetTrigger(firstAnim)))
+                    .Append(transform.DOMoveX(target.position.x, secondDuration).OnComplete(() => m_Animator.SetTrigger(secondAnim)));
+            }
+
+            m_MovementSequence.OnKill(() =>
+            {
+                if (GameManager.Ins.isLevelFinished && !m_IsAnimated)
+                {
+                    MovePlayer(GameManager.Ins.lastRoad, MoveType.Finish);
+                    m_IsAnimated = true;
+                }
+            });
         }
 
         private void HandleDeath()
