@@ -314,7 +314,7 @@ GameObject:
   - component: {fileID: 1660744434}
   - component: {fileID: 1660744433}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Start Platform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -433,6 +433,7 @@ MonoBehaviour:
   perfectTreshold: 0.2
   dieTreshold: 0
   lastRoad: {fileID: 1660744432}
+  comboCount: 0
   m_EndPlatformPrefab: {fileID: 5523553954060027663, guid: 6b3d00d73baed3343bc96d7915ed9349, type: 3}
   m_RoadPrefab: {fileID: 4927548982705532228, guid: 7cbf4a55168666d41b164e83d55618b0, type: 3}
   m_StartX: 3

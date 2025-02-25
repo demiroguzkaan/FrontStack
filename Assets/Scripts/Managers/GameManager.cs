@@ -1,6 +1,7 @@
 using UnityEngine;
 using Scripts.Road;
 using UnityEngine.Events;
+using Scripts.Player;
 
 namespace Scripts.Managers
 {
@@ -32,6 +33,7 @@ namespace Scripts.Managers
         [SerializeField] private RoadBase m_RoadPrefab;
         [SerializeField] private float m_StartX;
         [SerializeField] private float m_ZDistance;
+        [SerializeField] private PlayerBase m_Player;
 
         private Transform m_EndPlatform;
         private int m_StartDirection = 1;
@@ -56,6 +58,7 @@ namespace Scripts.Managers
             onGameWin += () =>
             {
                 lastRoad = m_EndPlatform;
+                m_Player.MovePlayer(m_EndPlatform, Enums.MoveType.Finish);
                 // move player
                 // center player
                 // win anim
