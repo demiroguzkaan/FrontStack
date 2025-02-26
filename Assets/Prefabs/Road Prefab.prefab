@@ -181,8 +181,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1cac9caf96f59e4ab732b5fe8a7a748, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_LeftChild: {fileID: 4927548982231044940}
-  m_RightChild: {fileID: 4927548983133302861}
+  m_Renderer: {fileID: 4927548982705532230}
+  m_LeftChildRenderer: {fileID: 4927548982231044942}
+  m_RightChildRenderer: {fileID: 4927548983133302863}
   m_MoveDuration: 2.5
   m_SliceUpForce: 1
   m_SliceSideForce: 1

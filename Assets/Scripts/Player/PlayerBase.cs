@@ -22,6 +22,7 @@ namespace Scripts.Player
         private void Start()
         {
             GameManager.Ins.onGameStart += () => { m_Animator.SetTrigger(IDLE_KEY); m_IsAnimated = false; };
+            GameManager.Ins.onGameLose += () => MovePlayer(null, MoveType.Die);
             GameManager.Ins.onRoadTriggered += () => MovePlayer(GameManager.Ins.lastRoad, MoveType.Road);
         }
 
@@ -44,17 +45,18 @@ namespace Scripts.Player
             }
         }
 
-        private void MoveToTarget(Transform target, bool moveXFirst, float firstDuration, string firstAnim, float secondDuration, string secondAnim)
+        private void MoveToTarget(Transform target, bool isTargetRoad, float firstDuration, string firstAnim, float secondDuration, string secondAnim)
         {
-            if (moveXFirst)
+            if (isTargetRoad)
             {
                 m_MovementSequence.Append(transform.DOMoveX(target.position.x, firstDuration).OnComplete(() => m_Animator.SetTrigger(firstAnim)))
                     .Append(transform.DOMoveZ(target.position.z, secondDuration).OnComplete(() => m_Animator.SetTrigger(secondAnim)));
             }
             else
             {
-                m_MovementSequence.Append(transform.DOMoveZ(target.position.z, firstDuration).OnComplete(() => m_Animator.SetTrigger(firstAnim)))
-                    .Append(transform.DOMoveX(target.position.x, secondDuration).OnComplete(() => m_Animator.SetTrigger(secondAnim)));
+                m_Animator.SetTrigger(firstAnim);
+                m_MovementSequence.Append(transform.DOMoveZ(target.position.z, firstDuration).OnComplete(() => m_Animator.SetTrigger(secondAnim)))
+                    .Append(transform.DOMoveX(target.position.x, secondDuration).OnComplete(() => GameManager.Ins.OnGameWin()));
             }
 
             m_MovementSequence.OnKill(() =>
@@ -69,7 +71,14 @@ namespace Scripts.Player
 
         private void HandleDeath()
         {
-            m_MovementSequence.Append(transform.DOScale(Vector3.zero, m_DieDuration))
+            var jumpPosition = transform.position;
+            jumpPosition.y -= 10;
+            jumpPosition.z += 5;
+
+            m_Animator.SetTrigger(RUN_KEY);
+
+            m_MovementSequence.Append(transform.DOJump(jumpPosition, 6, 1, m_DieDuration))
+                .Join(transform.DOScale(Vector3.zero, m_DieDuration))
                 .OnComplete(() => gameObject.SetActive(false));
         }
     }

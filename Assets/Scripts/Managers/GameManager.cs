@@ -1,10 +1,12 @@
 using UnityEngine;
 using Scripts.Road;
-using UnityEngine.Events;
 using Scripts.Player;
+using UnityEngine.Events;
+using System.Collections;
 
 namespace Scripts.Managers
 {
+    [DefaultExecutionOrder(-99999)]
     public class GameManager : MonoBehaviour
     {
         private static GameManager m_Ins;
@@ -29,6 +31,7 @@ namespace Scripts.Managers
         public float dieTreshold;
 
         public Transform lastRoad;
+        public Transform roadsParent;
         public int comboCount;
 
         [SerializeField] private Transform m_EndPlatformPrefab;
@@ -47,6 +50,7 @@ namespace Scripts.Managers
             onGameStart += () =>
             {
                 isLevelFinished = false;
+                comboCount = 0;
                 m_CurrentRoadCount = 0;
                 m_TargetRoadCount = LevelManager.Ins.GetRoadCount();
                 SpawnEndPlatform();
@@ -57,16 +61,8 @@ namespace Scripts.Managers
             {
                 SpawnNextRoad();
             };
-
-            onGameWin += () =>
-            {
-                lastRoad = m_EndPlatform;
-                isLevelFinished = true;
-                // win ui
-            };
         }
 
-        [ContextMenu("Start")]
         public void OnGameStart()
         {
             onGameStart?.Invoke();
@@ -92,7 +88,7 @@ namespace Scripts.Managers
             m_CurrentRoadCount++;
             if (m_CurrentRoadCount >= m_TargetRoadCount)
             {
-                OnGameWin();
+                StartCoroutine(OnLastRoad());
             }
             else
             {
@@ -100,7 +96,7 @@ namespace Scripts.Managers
                 pos.x = m_StartX * m_StartDirection;
                 pos.z = lastRoad.position.z + m_ZDistance;
 
-                var newRoad = Instantiate(m_RoadPrefab, pos, Quaternion.identity);
+                var newRoad = Instantiate(m_RoadPrefab, pos, Quaternion.identity, roadsParent);
 
                 m_StartDirection *= -1;
                 dieTreshold = lastRoad.localScale.x;
@@ -113,6 +109,13 @@ namespace Scripts.Managers
             pos.z += m_ZDistance * m_TargetRoadCount;
 
             m_EndPlatform = Instantiate(m_EndPlatformPrefab, pos, Quaternion.identity);
+        }
+
+        private IEnumerator OnLastRoad()
+        {
+            yield return new WaitForSeconds(.25f);
+            lastRoad = m_EndPlatform;
+            isLevelFinished = true;
         }
     }
 }

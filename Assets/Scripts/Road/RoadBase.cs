@@ -6,8 +6,9 @@ namespace Scripts.Road
 {
     public class RoadBase : MonoBehaviour
     {
-        [SerializeField] private Transform m_LeftChild;
-        [SerializeField] private Transform m_RightChild;
+        [SerializeField] private Renderer m_Renderer;
+        [SerializeField] private Renderer m_LeftChildRenderer;
+        [SerializeField] private Renderer m_RightChildRenderer;
         [SerializeField] private float m_MoveDuration;
         [SerializeField] private float m_SliceUpForce;
         [SerializeField] private float m_SliceSideForce;
@@ -16,6 +17,7 @@ namespace Scripts.Road
         private GameManager m_GameManager;
         private Sequence m_MovementSequence;
         private float m_StartX;
+        private bool m_IsSliced;
 
         private void Start()
         {
@@ -26,6 +28,7 @@ namespace Scripts.Road
         {
             m_GameManager = GameManager.Ins;
             SetScale();
+            SetColors();
             m_StartX = transform.position.x;
             StartMoving();
         }
@@ -35,12 +38,18 @@ namespace Scripts.Road
             transform.localScale = new Vector3(m_GameManager.lastRoad.localScale.x, transform.localScale.y, transform.localScale.z);
         }
 
+        private void SetColors()
+        {
+            var material = ColorManager.Ins.GetMaterial();
+            m_Renderer.material = material;
+            m_LeftChildRenderer.material = material;
+            m_RightChildRenderer.material = material;
+        }
+
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                Slice();
-            }
+            if (Input.GetMouseButtonDown(0) && !m_IsSliced) Slice();
+
         }
 
         private void StartMoving()
@@ -54,11 +63,12 @@ namespace Scripts.Road
 
         private void Slice()
         {
+            m_IsSliced = true;
             var posDistance = Mathf.Abs(transform.position.x - m_GameManager.lastRoad.position.x);
 
             if (posDistance > m_GameManager.dieTreshold)
             {
-                Debug.Log("Died");
+                TriggerDieAction();
             }
             else if (posDistance < m_GameManager.perfectTreshold)
             {
@@ -67,8 +77,8 @@ namespace Scripts.Road
             else
             {
                 var isLeft = transform.position.x < m_GameManager.lastRoad.position.x;
-                var primaryChild = isLeft ? m_LeftChild : m_RightChild;
-                var secondaryChild = isLeft ? m_RightChild : m_LeftChild;
+                var primaryChild = isLeft ? m_LeftChildRenderer.transform : m_RightChildRenderer.transform;
+                var secondaryChild = isLeft ? m_RightChildRenderer.transform : m_LeftChildRenderer.transform;
 
                 primaryChild.gameObject.SetActive(true);
                 secondaryChild.gameObject.SetActive(true);
@@ -80,7 +90,6 @@ namespace Scripts.Road
 
         private void TriggerPerfectActions()
         {
-
             var pos = transform.position;
             pos.x = m_GameManager.lastRoad.position.x;
 
@@ -91,6 +100,13 @@ namespace Scripts.Road
             m_GameManager.OnRoadTriggered();
             m_MovementSequence.Kill();
             Destroy(this);
+        }
+
+        private void TriggerDieAction()
+        {
+            gameObject.AddComponent<Rigidbody>();
+            m_MovementSequence.Kill();
+            m_GameManager.OnGameLose();
         }
 
         private void TriggerSliceActions(Transform primaryChild, Transform secondaryChild, bool isLeft)
@@ -114,7 +130,7 @@ namespace Scripts.Road
 
         private void TriggerAfterSliceActions(Transform primaryChild, Transform secondaryChild, bool isLeft)
         {
-            primaryChild.SetParent(null);
+            primaryChild.SetParent(m_GameManager.roadsParent);
             Destroy(primaryChild.gameObject, 2f);
 
             var rb = primaryChild.gameObject.AddComponent<Rigidbody>();
@@ -125,7 +141,7 @@ namespace Scripts.Road
             var rotationForce = new Vector3(0, 0, isLeft ? m_SliceRotationForce : -m_SliceRotationForce);
             rb.angularVelocity = rotationForce;
 
-            secondaryChild.SetParent(null);
+            secondaryChild.SetParent(m_GameManager.roadsParent);
             m_GameManager.lastRoad = secondaryChild;
 
             m_GameManager.comboCount = 0;
